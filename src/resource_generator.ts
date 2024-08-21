@@ -109,14 +109,14 @@ export class ResourceGenerator {
   ) {
     console.log(`Create resource file from ${resourcePath}`);
 
-    const directoryName = resourcePath.split("\\").pop();
-
+    const resultFileName = path.join(
+      __dirname,
+      `../encrypted_res/${resourcePath.split("\\").pop()}.json`
+    );
+    
     const encryptedData = this.encryptData(resourceDatas);
 
-    fs.writeFileSync(
-      path.join(__dirname, `${this.defaultRelativePath}/${directoryName}`),
-      encryptedData
-    );
+    fs.writeFileSync(resultFileName, encryptedData);
   }
 
   private encryptData(resourceDatas: Array<Object>) {
