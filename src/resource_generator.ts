@@ -25,7 +25,7 @@ export class ResourceGenerator {
   }
 
   public async generate() {
-    console.log('Start resource generate');
+    console.log("Start resource generate");
 
     const pathList = this.getPathList();
 
@@ -109,7 +109,8 @@ export class ResourceGenerator {
   ) {
     console.log(`Create resource file from ${resourcePath}`);
 
-    const directoryName = resourcePath.split("/").pop();
+    const directoryName = resourcePath.split("\\").pop();
+
     const encryptedData = this.encryptData(resourceDatas);
 
     fs.writeFileSync(
