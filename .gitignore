@@ -1,0 +1,4 @@
+node_modules
+res
+encrypted_res
+.env
