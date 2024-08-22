@@ -4,47 +4,83 @@ import crypto from "crypto";
 import secret from "../secret.json";
 
 export class ResourceDecryptor {
-  private readonly encryptedResPath: string;
-  private readonly drugRecognitionEncryptPath: string;
-  private readonly finishedMedicinePermissiondetailsEncryptPath: string;
+  private readonly drugRecognitionDirName: string;
+  private readonly finishedMedicinePermissionDetailsDirName: string;
 
   constructor() {
-    this.encryptedResPath = path.join(__dirname, `../encrypted_res`);
-
-    this.drugRecognitionEncryptPath = path.join(
-      this.encryptedResPath,
-      "/drug_recognition"
-    );
-
-    this.finishedMedicinePermissiondetailsEncryptPath = path.join(
-      this.encryptedResPath,
-      "/finisihed_medecine_permission_details"
-    );
+    this.drugRecognitionDirName = "drug_recognition";
+    this.finishedMedicinePermissionDetailsDirName =
+      "finisihed_medecine_permission_details";
   }
 
   public async decrypt() {
-    const pathList = this.getPathList();
+    for await (const resourcePath of this.getPathList()) {
+      const fileList = this.getFileList(resourcePath);
+      if (fileList.length === 0) {
+        continue;
+      }
 
-    for await (const resourcePath of pathList) {
-      const decryptedData = this.decryptResourceData(resourcePath);
-
-      const decryptedFileName = path.join(
-        __dirname,
-        `../decrypted_res/${resourcePath.split("\\").pop()}.json`
-      );
-
-      fs.writeFileSync(decryptedFileName, decryptedData);
+      await this.createDecryptedResourceFiles(resourcePath, fileList);
     }
   }
 
   private getPathList() {
+    const defaultRelativePath = "../encrypted_res";
+
     return [
-      this.drugRecognitionEncryptPath,
-      this.finishedMedicinePermissiondetailsEncryptPath,
+      path.join(
+        __dirname,
+        `${defaultRelativePath}/${this.drugRecognitionDirName}`
+      ),
+      path.join(
+        __dirname,
+        `${defaultRelativePath}/${this.finishedMedicinePermissionDetailsDirName}`
+      ),
     ];
   }
 
-  private decryptResourceData(resourcePath: string) {
+  private getFileList(resourcePath: string) {
+    return fs.existsSync(resourcePath) ? fs.readdirSync(resourcePath) : [];
+  }
+
+  private async createDecryptedResourceFiles(
+    resourcePath: string,
+    fileList: string[]
+  ) {
+    for await (const fileName of fileList) {
+      const directoryPath = path.join(
+        __dirname,
+        `../decrypted_res/${resourcePath.split("\\").pop()}`
+      );
+
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath);
+      }
+
+      const decryptedFileName = path.join(directoryPath, `${fileName}.json`);
+
+      const encryptedResourceData = this.getEncryptedResourceData(
+        resourcePath,
+        fileName
+      );
+      const decryptedResourceData = this.decryptData(encryptedResourceData);
+
+      fs.writeFileSync(decryptedFileName, decryptedResourceData);
+    }
+  }
+
+  private getEncryptedResourceData(resourcePath: string, fileName: string) {
+    const enCryptedDirectoryPath = path.join(
+      __dirname,
+      `../encrypted_res/${resourcePath.split("\\").pop()}`
+    );
+
+    return fs
+      .readFileSync(path.join(enCryptedDirectoryPath, fileName))
+      .toString();
+  }
+
+  private decryptData(encryptedResourceData: string) {
     const { aesKey, aesIv } = secret;
 
     const decipher = crypto.createDecipheriv(
@@ -53,8 +89,6 @@ export class ResourceDecryptor {
       Buffer.from(aesIv, "hex")
     );
 
-    const encryptedResourceData = fs.readFileSync(resourcePath);
-
-    return decipher.update(encryptedResourceData.toString(), "base64", "utf-8");
+    return decipher.update(encryptedResourceData, "base64", "utf-8");
   }
 }
