@@ -57,11 +57,21 @@ export class ResourceGenerator {
         `${resourcePath}/${fileName}`
       );
 
-      const directory = resourcePath.split("\\").pop() as string;
-
-      if (jsonDatas.length > 0) {
-        this.createEncryptedResourceFile(directory, fileName, jsonDatas);
+      if (jsonDatas.length === 0) {
+        continue;
       }
+
+      console.log(`Create resource file from ${fileName}`);
+
+      const directoryPath = path.join(__dirname, `../encrypted_res/${resourcePath.split("\\").pop()}`);
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath);
+      }
+  
+      const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
+      const encryptedData = this.encryptData(jsonDatas);
+  
+      fs.writeFileSync(resultFileName, encryptedData);
     }
   }
 
@@ -90,24 +100,6 @@ export class ResourceGenerator {
     const csvString = iconvLite.decode(fs.readFileSync(fileName), "euc-kr");
     const rows: Array<Object> = await new Converter().fromString(csvString);
     return rows;
-  }
-
-  private createEncryptedResourceFile(
-    directory: string,
-    fileName: string,
-    resourceData: Object
-  ) {
-    console.log(`Create resource file from ${fileName}`);
-
-    const directoryPath = path.join(__dirname, `../encrypted_res/${directory}`);
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath);
-    }
-
-    const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
-    const encryptedData = this.encryptData(resourceData);
-
-    fs.writeFileSync(resultFileName, encryptedData);
   }
 
   private encryptData(resourceData: Object) {
