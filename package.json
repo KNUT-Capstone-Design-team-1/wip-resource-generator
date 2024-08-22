@@ -4,8 +4,7 @@
   "description": "what is pill resource generator",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node ./src/index.ts",
-    "test": "cross-env MODE=test ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -19,9 +18,7 @@
   "homepage": "https://github.com/KNUT-Capstone-Design-team-1/wip-resource-generator#readme",
   "dependencies": {
     "@types/node": "^22.4.2",
-    "cross-env": "^7.0.3",
     "csvtojson": "^2.0.10",
-    "dotenv": "^16.4.5",
     "fs": "^0.0.1-security",
     "iconv-lite": "^0.6.3",
     "simple-excel-to-json": "^2.3.0",

@@ -3,7 +3,8 @@ import fs from "fs";
 import xlsParser from "simple-excel-to-json";
 import iconvLite from "iconv-lite";
 import { Converter } from "csvtojson/v2/Converter";
-import { publicEncrypt } from "crypto";
+import crypto from "crypto";
+import secret from "../secret.json";
 
 export class ResourceGenerator {
   private readonly drugRecognitionResorcePath: string;
@@ -111,19 +112,28 @@ export class ResourceGenerator {
 
     const resultFileName = path.join(
       __dirname,
-      `../encrypted_res/${resourcePath.split("\\").pop()}.json`
+      `../encrypted_res/${resourcePath.split("\\").pop()}`
     );
-    
+
     const encryptedData = this.encryptData(resourceDatas);
 
     fs.writeFileSync(resultFileName, encryptedData);
   }
 
   private encryptData(resourceDatas: Array<Object>) {
-    const publicKey = process.env.RSA_PUBLIC_KEY as string;
+    const { aesKey, aesIv } = secret;
 
-    const resourceBuffer = Buffer.from(JSON.stringify(resourceDatas));
+    const cipher = crypto.createCipheriv(
+      "aes-256-cbc",
+      Buffer.from(aesKey, "hex"),
+      Buffer.from(aesIv, "hex")
+    );
 
-    return publicEncrypt({ key: publicKey }, resourceBuffer);
+    const aesEncryptedResource = Buffer.concat([
+      cipher.update(Buffer.from(JSON.stringify(resourceDatas))),
+      cipher.final(),
+    ]);
+
+    return aesEncryptedResource.toString("base64");
   }
 }

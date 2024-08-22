@@ -1,4 +1,4 @@
 node_modules
 res
 encrypted_res
-.env
+secret.json
