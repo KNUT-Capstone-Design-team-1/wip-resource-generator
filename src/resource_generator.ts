@@ -63,14 +63,18 @@ export class ResourceGenerator {
 
       console.log(`Create resource file from ${fileName}`);
 
-      const directoryPath = path.join(__dirname, `../encrypted_res/${resourcePath.split("\\").pop()}`);
+      const directoryPath = path.join(
+        __dirname,
+        `../encrypted_res/${resourcePath.split("\\").pop()}`
+      );
+
       if (!fs.existsSync(directoryPath)) {
         fs.mkdirSync(directoryPath);
       }
-  
+
       const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
       const encryptedData = this.encryptData(jsonDatas);
-  
+
       fs.writeFileSync(resultFileName, encryptedData);
     }
   }
@@ -111,11 +115,6 @@ export class ResourceGenerator {
       Buffer.from(aesIv, "hex")
     );
 
-    const aesEncryptedResource = Buffer.concat([
-      cipher.update(Buffer.from(JSON.stringify(resourceData))),
-      cipher.final(),
-    ]);
-
-    return aesEncryptedResource.toString("base64");
+    return cipher.update(JSON.stringify(resourceData), "utf-8", "base64");
   }
 }
