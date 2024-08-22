@@ -7,120 +7,110 @@ import crypto from "crypto";
 import secret from "../secret.json";
 
 export class ResourceGenerator {
-  private readonly drugRecognitionResorcePath: string;
-  private readonly finishedMedicinePermissionDetailsResourcePath: string;
-  private readonly defaultRelativePath: string;
+  private readonly drugRecognitionDirName: string;
+  private readonly finishedMedicinePermissionDetailsDirName: string;
 
   constructor() {
-    this.defaultRelativePath = "../res";
-
-    this.drugRecognitionResorcePath = path.join(
-      __dirname,
-      `${this.defaultRelativePath}/drug_recognition`
-    );
-
-    this.finishedMedicinePermissionDetailsResourcePath = path.join(
-      __dirname,
-      `${this.defaultRelativePath}/finisihed_medecine_permission_details`
-    );
+    this.drugRecognitionDirName = "drug_recognition";
+    this.finishedMedicinePermissionDetailsDirName =
+      "finisihed_medecine_permission_details";
   }
 
   public async generate() {
     console.log("Start resource generate");
 
-    const pathList = this.getPathList();
-
-    for await (const resourcePath of pathList) {
-      const resourceDatas = await this.generateResourceData(resourcePath);
-
-      if (resourceDatas.length === 0) {
+    for await (const resourcePath of this.getPathList()) {
+      const fileList = this.getFileList(resourcePath);
+      if (fileList.length === 0) {
         continue;
       }
 
-      await this.createResourceFile(resourcePath, resourceDatas);
+      await this.createEncryptedResourceFiles(resourcePath, fileList);
     }
   }
 
   private getPathList() {
+    const defaultRelativePath = "../res";
+
     return [
-      this.drugRecognitionResorcePath,
-      this.finishedMedicinePermissionDetailsResourcePath,
+      path.join(
+        __dirname,
+        `${defaultRelativePath}/${this.drugRecognitionDirName}`
+      ),
+      path.join(
+        __dirname,
+        `${defaultRelativePath}/${this.finishedMedicinePermissionDetailsDirName}`
+      ),
     ];
   }
 
-  private async generateResourceData(resourcePath: string) {
-    console.log(`Generate resource data of ${resourcePath}`);
-
-    const fileList = this.getResourceFileList(resourcePath);
-    if (fileList.length === 0) {
-      return [];
-    }
-
-    const datas: object[] = [];
-    for await (const file of fileList) {
-      const jsonData = await this.convertExcelToJSON(`${resourcePath}/${file}`);
-
-      if (jsonData.length > 0) {
-        datas.push(...jsonData);
-      }
-    }
-
-    return datas;
-  }
-
-  private getResourceFileList(resourcePath: string) {
+  private getFileList(resourcePath: string) {
     return fs.existsSync(resourcePath) ? fs.readdirSync(resourcePath) : [];
   }
 
-  private async convertExcelToJSON(resourcePath: string) {
-    console.log(`Convert excel to JSON of ${resourcePath}`);
+  private async createEncryptedResourceFiles(
+    resourcePath: string,
+    fileList: string[]
+  ) {
+    for await (const fileName of fileList) {
+      const jsonDatas = await this.convertExcelToJSON(
+        `${resourcePath}/${fileName}`
+      );
 
-    const fileExtension = resourcePath.split(".").slice(-1)[0];
+      const directory = resourcePath.split("\\").pop() as string;
+
+      if (jsonDatas.length > 0) {
+        this.createEncryptedResourceFile(directory, fileName, jsonDatas);
+      }
+    }
+  }
+
+  private async convertExcelToJSON(fileName: string) {
+    const fileExtension = fileName.split(".").slice(-1)[0];
 
     switch (fileExtension) {
       case "xlsx":
       case "xls":
-        return this.convertXLSToJSON(resourcePath);
+        return this.convertXLSToJSON(fileName);
 
       case "csv":
-        return this.convertCSVToJSON(resourcePath);
+        return this.convertCSVToJSON(fileName);
 
       default:
         throw new Error(`Invalid file extension ${fileExtension}`);
     }
   }
 
-  private async convertXLSToJSON(resourcePath: string) {
-    const doc: { flat: () => object[] } = xlsParser.parseXls2Json(resourcePath);
-
+  private async convertXLSToJSON(fileName: string) {
+    const doc: { flat: () => object[] } = xlsParser.parseXls2Json(fileName);
     return doc.flat();
   }
 
-  private async convertCSVToJSON(resourcePath: string) {
-    const csvString = iconvLite.decode(fs.readFileSync(resourcePath), "euc-kr");
-
+  private async convertCSVToJSON(fileName: string) {
+    const csvString = iconvLite.decode(fs.readFileSync(fileName), "euc-kr");
     const rows: Array<Object> = await new Converter().fromString(csvString);
-
     return rows;
   }
 
-  private async createResourceFile(
-    resourcePath: string,
-    resourceDatas: Array<Object>
+  private createEncryptedResourceFile(
+    directory: string,
+    fileName: string,
+    resourceData: Object
   ) {
-    console.log(`Create resource file from ${resourcePath}`);
+    console.log(`Create resource file from ${fileName}`);
 
-    const resultFileName = path.join(
-      __dirname,
-      `../encrypted_res/${resourcePath.split("\\").pop()}`
-    );
+    const directoryPath = path.join(__dirname, `../encrypted_res/${directory}`);
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath);
+    }
 
-    const encryptedData = this.encryptData(resourceDatas);
+    const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
+    const encryptedData = this.encryptData(resourceData);
 
     fs.writeFileSync(resultFileName, encryptedData);
   }
 
-  private encryptData(resourceDatas: Array<Object>) {
+  private encryptData(resourceData: Object) {
     const { aesKey, aesIv } = secret;
 
     const cipher = crypto.createCipheriv(
@@ -130,7 +120,7 @@ export class ResourceGenerator {
     );
 
     const aesEncryptedResource = Buffer.concat([
-      cipher.update(Buffer.from(JSON.stringify(resourceDatas))),
+      cipher.update(Buffer.from(JSON.stringify(resourceData))),
       cipher.final(),
     ]);
 
