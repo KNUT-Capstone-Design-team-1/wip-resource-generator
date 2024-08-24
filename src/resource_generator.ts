@@ -75,7 +75,7 @@ export class ResourceGenerator {
       const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
       const encryptedData = this.encryptData(jsonDatas);
 
-      fs.writeFileSync(resultFileName, encryptedData);
+      fs.writeFileSync(resultFileName, encryptedData.toString("hex"), "utf8");
     }
   }
 
@@ -115,6 +115,10 @@ export class ResourceGenerator {
       Buffer.from(aesIv, "hex")
     );
 
-    return cipher.update(JSON.stringify(resourceData), "utf-8", "base64");
+    // https://stackoverflow.com/questions/62813904/node-js-decipher-final-throws-wrong-final-block-length-error
+    return Buffer.concat([
+      cipher.update(Buffer.from(JSON.stringify(resourceData), "utf8")),
+      cipher.final(),
+    ]);
   }
 }

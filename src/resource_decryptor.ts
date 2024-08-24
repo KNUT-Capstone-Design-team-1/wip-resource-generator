@@ -57,7 +57,7 @@ export class ResourceDecryptor {
         fs.mkdirSync(directoryPath);
       }
 
-      const decryptedFileName = path.join(directoryPath, `${fileName}.json`);
+      const resultFileName = path.join(directoryPath, `${fileName}.json`);
 
       const encryptedResourceData = this.getEncryptedResourceData(
         resourcePath,
@@ -65,7 +65,7 @@ export class ResourceDecryptor {
       );
       const decryptedResourceData = this.decryptData(encryptedResourceData);
 
-      fs.writeFileSync(decryptedFileName, decryptedResourceData);
+      fs.writeFileSync(resultFileName, decryptedResourceData);
     }
   }
 
@@ -75,9 +75,7 @@ export class ResourceDecryptor {
       `../encrypted_res/${resourcePath.split("\\").pop()}`
     );
 
-    return fs
-      .readFileSync(path.join(enCryptedDirectoryPath, fileName))
-      .toString();
+    return fs.readFileSync(path.join(enCryptedDirectoryPath, fileName), "utf8");
   }
 
   private decryptData(encryptedResourceData: string) {
@@ -89,6 +87,10 @@ export class ResourceDecryptor {
       Buffer.from(aesIv, "hex")
     );
 
-    return decipher.update(encryptedResourceData, "base64", "utf-8");
+    // https://stackoverflow.com/questions/62813904/node-js-decipher-final-throws-wrong-final-block-length-error
+    return Buffer.concat([
+      decipher.update(Buffer.from(encryptedResourceData, "hex")),
+      decipher.final(),
+    ]);
   }
 }
