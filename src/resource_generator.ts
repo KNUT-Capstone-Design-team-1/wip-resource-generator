@@ -13,7 +13,7 @@ export class ResourceGenerator {
   constructor() {
     this.drugRecognitionDirName = "drug_recognition";
     this.finishedMedicinePermissionDetailsDirName =
-      "finisihed_medecine_permission_details";
+      "finished_medecine_permission_details";
   }
 
   public async generate() {
