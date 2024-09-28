@@ -4,7 +4,6 @@ import xlsParser from "simple-excel-to-json";
 import iconvLite from "iconv-lite";
 import { Converter } from "csvtojson/v2/Converter";
 import crypto from "crypto";
-import secret from "../secret.json";
 
 export class ResourceGenerator {
   private readonly drugRecognitionDirName: string;
@@ -69,7 +68,7 @@ export class ResourceGenerator {
       );
 
       if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath);
+        fs.mkdirSync(directoryPath, { recursive: true });
       }
 
       const resultFileName = path.join(directoryPath, fileName.split(".")[0]);
@@ -107,12 +106,12 @@ export class ResourceGenerator {
   }
 
   private encryptData(resourceData: Object) {
-    const { aesKey, aesIv } = secret;
+    const { RESOURCE_AES_KEY, RESOURCE_AES_IV } = process.env;
 
     const cipher = crypto.createCipheriv(
       "aes-256-cbc",
-      Buffer.from(aesKey, "hex"),
-      Buffer.from(aesIv, "hex")
+      Buffer.from(RESOURCE_AES_KEY as string, "hex"),
+      Buffer.from(RESOURCE_AES_IV as string, "hex")
     );
 
     // https://stackoverflow.com/questions/62813904/node-js-decipher-final-throws-wrong-final-block-length-error

@@ -2,5 +2,5 @@ node_modules
 res
 encrypted_res
 decrypted_res
-secret.json
 .tmp
+.env

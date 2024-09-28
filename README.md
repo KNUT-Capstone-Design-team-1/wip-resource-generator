@@ -37,12 +37,9 @@ yarn start decrypt
 
   - 프로그램 실행 후 복호화된 리소스 파일이 위치하는 디렉터리
 
-- ./secret.json
-  - AES 암호화 정보
+- ./.env
 
-```json
-{
-  "aesKey": "",
-  "aesIv": ""
-}
+```bash
+RESOURCE_AES_KEY=
+RESOURCE_AES_IV=
 ```

@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import secret from "../secret.json";
 
 export class ResourceDecryptor {
   private readonly drugRecognitionDirName: string;
@@ -54,7 +53,7 @@ export class ResourceDecryptor {
       );
 
       if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath);
+        fs.mkdirSync(directoryPath, { recursive: true });
       }
 
       const resultFileName = path.join(directoryPath, `${fileName}.json`);
@@ -79,12 +78,12 @@ export class ResourceDecryptor {
   }
 
   private decryptData(encryptedResourceData: string) {
-    const { aesKey, aesIv } = secret;
+    const { RESOURCE_AES_KEY, RESOURCE_AES_IV } = process.env;
 
     const decipher = crypto.createDecipheriv(
       "aes-256-cbc",
-      Buffer.from(aesKey, "hex"),
-      Buffer.from(aesIv, "hex")
+      Buffer.from(RESOURCE_AES_KEY as string, "hex"),
+      Buffer.from(RESOURCE_AES_IV as string, "hex")
     );
 
     // https://stackoverflow.com/questions/62813904/node-js-decipher-final-throws-wrong-final-block-length-error

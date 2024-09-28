@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { ResourceGenerator } from "./resource_generator";
 import { ResourceDecryptor } from "./resource_decryptor";
 
