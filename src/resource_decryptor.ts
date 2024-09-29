@@ -3,78 +3,40 @@ import fs from "fs";
 import crypto from "crypto";
 
 export class ResourceDecryptor {
-  private readonly drugRecognitionDirName: string;
-  private readonly finishedMedicinePermissionDetailsDirName: string;
-
-  constructor() {
-    this.drugRecognitionDirName = "drug_recognition";
-    this.finishedMedicinePermissionDetailsDirName =
-      "finished_medecine_permission_details";
-  }
-
   public async decrypt() {
-    for await (const resourcePath of this.getPathList()) {
-      const fileList = this.getFileList(resourcePath);
-      if (fileList.length === 0) {
-        continue;
-      }
+    const resourcePath = path.join(__dirname, "../encrypted_res");
 
-      await this.createDecryptedResourceFiles(resourcePath, fileList);
+    const fileList = fs.existsSync(resourcePath)
+      ? fs.readdirSync(resourcePath)
+      : [];
+
+    if (fileList.length === 0) {
+      return;
     }
-  }
 
-  private getPathList() {
-    const defaultRelativePath = "../encrypted_res";
-
-    return [
-      path.join(
-        __dirname,
-        `${defaultRelativePath}/${this.drugRecognitionDirName}`
-      ),
-      path.join(
-        __dirname,
-        `${defaultRelativePath}/${this.finishedMedicinePermissionDetailsDirName}`
-      ),
-    ];
-  }
-
-  private getFileList(resourcePath: string) {
-    return fs.existsSync(resourcePath) ? fs.readdirSync(resourcePath) : [];
+    await this.createDecryptedResourceFiles(fileList);
   }
 
   private async createDecryptedResourceFiles(
-    resourcePath: string,
     fileList: string[]
   ) {
+    const directoryPath = path.join(__dirname, `../decrypted_res`);
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+    }
+
     for await (const fileName of fileList) {
-      const directoryPath = path.join(
-        __dirname,
-        `../decrypted_res/${resourcePath.split("\\").pop()}`
+      const resultFileName = path.join(
+        directoryPath,
+        `${fileName.split('.')[0]}.json`
       );
 
-      if (!fs.existsSync(directoryPath)) {
-        fs.mkdirSync(directoryPath, { recursive: true });
-      }
-
-      const resultFileName = path.join(directoryPath, `${fileName}.json`);
-
-      const encryptedResourceData = this.getEncryptedResourceData(
-        resourcePath,
-        fileName
+      const decryptedResourceData = this.decryptData(
+        fs.readFileSync(path.join(__dirname, `../encrypted_res/${fileName}`), "utf8")
       );
-      const decryptedResourceData = this.decryptData(encryptedResourceData);
 
       fs.writeFileSync(resultFileName, decryptedResourceData);
     }
-  }
-
-  private getEncryptedResourceData(resourcePath: string, fileName: string) {
-    const enCryptedDirectoryPath = path.join(
-      __dirname,
-      `../encrypted_res/${resourcePath.split("\\").pop()}`
-    );
-
-    return fs.readFileSync(path.join(enCryptedDirectoryPath, fileName), "utf8");
   }
 
   private decryptData(encryptedResourceData: string) {
