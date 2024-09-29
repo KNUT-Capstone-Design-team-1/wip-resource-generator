@@ -11,7 +11,7 @@ export class ResourceGenerator {
   private readonly finishedMedicinePermissionDetailsDirName: string;
 
   constructor() {
-    this.sizePerResLimit = 30 * 1024 * 1024; // MB
+    this.sizePerResLimit = 40 * 1024 * 1024; // MB
 
     this.drugRecognitionDirName = "drug_recognition";
 
