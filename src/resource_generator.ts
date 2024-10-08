@@ -11,7 +11,7 @@ export class ResourceGenerator {
   private readonly finishedMedicinePermissionDetailsDirName: string;
 
   constructor() {
-    this.sizePerResLimit = 40 * 1024 * 1024; // MB
+    this.sizePerResLimit = 10 * 1024 * 1024; // MB
 
     this.drugRecognitionDirName = "drug_recognition";
 
@@ -63,7 +63,7 @@ export class ResourceGenerator {
     const createEncryptFile = () => {
       const resourceType = path.join(
         directoryPath,
-        resourcePath.split("\\").pop() as string // 디렉터리 이름만 추출
+        resourcePath.split(/\\|\//).pop() as string // 디렉터리 이름만 추출
       );
 
       fs.writeFileSync(
