@@ -16,7 +16,7 @@ export class ResourceGenerator {
     this.drugRecognitionDirName = "drug_recognition";
 
     this.finishedMedicinePermissionDetailsDirName =
-      "finished_medecine_permission_details";
+      "finished_medicine_permission_details";
   }
 
   public async generate() {

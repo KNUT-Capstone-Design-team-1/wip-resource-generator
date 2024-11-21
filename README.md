@@ -27,7 +27,7 @@ yarn start decrypt
 
   - 원본 리소스 디렉터리
   - drug_recognition (의약품 낱알식별정보 데이터)
-  - finished_medecine_permission_details (완제 의약품 허가 상세 데이터)
+  - finished_medicine_permission_details (완제 의약품 허가 상세 데이터)
 
 - ./encrypted_res
 
